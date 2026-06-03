@@ -2,14 +2,14 @@
 
 **Contribution Number:** [1 / 2 / 3]  
 **Student:** [Your Name]  
-**Issue:** [GitHub issue link]  
+**Issue:** [astral-sh/uv #6264 — Fix reflow of index on image load](https://github.com/astral-sh/uv/issues/6264)  
 **Status:** [Phase I / Phase II / Phase III / Phase IV] [In Progress / Complete]
 
 ---
 
 ## Why I Chose This Issue
 
-[1-2 paragraphs explaining why this issue interests you, how it matches your skills/learning goals, what you hope to learn]
+On the uv documentation homepage (https://docs.astral.sh/uv/), the benchmark image has no reserved height, so when it finishes loading the surrounding content shifts down to make room for it. This causes a layout reflow (cumulative layout shift) where the page visibly "jumps" as the user is reading. It matters because layout shift is a jarring user-experience problem and a recognized Core Web Vitals metric (CLS) that hurts both readability and perceived quality of the docs. I chose it because it's a well-scoped, beginner-friendly frontend/docs fix where the root cause is clear (set a fixed height/aspect ratio for the image), and it lets me practice diagnosing layout shift and contributing to a real, widely used open-source project.
 
 ---
 
