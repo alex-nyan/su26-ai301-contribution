@@ -3,7 +3,7 @@
 **Contribution Number:** 1
 **Student:** Nyan Lin Htet
 **Issue:** [astral-sh/uv #6264 — Fix reflow of index on image load](https://github.com/astral-sh/uv/issues/6264)
-**Status:** Phase II — Complete
+**Status:** Phase III — Complete
 
 ---
 
@@ -138,33 +138,78 @@ Using UMPIRE framework (adapted):
 3. Preserve responsiveness: ensure the image still scales down on narrow viewports without distortion (`max-width: 100%; height: auto;`), so the declared dimensions act as a reserved ratio rather than a hard size.
 4. Run the docs formatter on touched files (`npx prettier --write docs/index.md` and/or the CSS), per uv's `CONTRIBUTING.md`.
 
-**Implement:** (Phase III) Branch off `astral-sh/uv` `main`, apply the change in `docs/index.md` (and `extra.css` if the CSS route is chosen), and open a focused PR referencing #6264.
+**Implement:** ✅ Done (Phase III) — branched off `astral-sh/uv` `main` and added `width="496" height="107"` to both benchmark `<img>` tags in `docs/index.md`. No CSS change was needed (see Implementation Notes). Commit: [`f0d0b3c`](https://github.com/alex-nyan/uv/commit/f0d0b3c264d31615c47f9dfac3604aa7999d38fb).
 
 **Review:** Self-review checklist — change is minimal and docs-only; respects uv's `CONTRIBUTING.md` (formatted with Prettier; no new features; a docs issue that's appropriate for community contribution per the `documentation` label); no change to the image's loaded appearance; light/dark theming still works.
 
-**Evaluate:** Re-run the Path B harness against the patched markup and confirm CLS drops to **0** with zero shift events; re-check the live/local docs in DevTools (Slow 3G, cache disabled) and confirm no visible jump; verify the image is not distorted across desktop and mobile widths. Local preview via `uv run --only-group docs mkdocs serve -f mkdocs.yml`.
+**Evaluate:** ✅ Done — see Testing Strategy below. The patched markup measures **CLS 0** with zero layout-shift events at desktop and mobile, and the image stays proportional.
+
+---
+
+## Implementation Notes
+
+### Phase III Progress
+
+The fix is implemented and verified. Summary of the work:
+
+- **Probed the live site to decide the minimal correct fix.** Using Playwright + Chrome against https://docs.astral.sh/uv/, I confirmed the live page has a real **CLS of ~0.023** whose dominant shift is sourced from the `<p>` / `<h2>` / `<ul>` elements directly below the benchmark image — i.e. the content being pushed down. I also confirmed the benchmark image is a **496×107** SVG with **no** `width`/`height` attributes.
+- **Determined that an attribute-only fix is sufficient and safe.** I tested whether adding `width`/`height` attributes would distort the image on narrow screens (which happens if `height:auto` isn't applied). At a 360px viewport the image stayed perfectly proportional (ratio 4.636), proving MkDocs Material already applies `height: auto` to content images. So **no CSS change to `extra.css` was needed** — the smaller, more idiomatic change.
+- **Applied the fix:** added `width="496" height="107"` to both the `#only-light` and `#only-dark` benchmark `<img>` tags in `docs/index.md`. The browser now reserves the image's box during first layout, so nothing below it moves when the image loads. Prettier reports the file unchanged (already conformant).
+- **Verified** the patched markup drives CLS to 0 with no distortion (details below).
+
+### Code Changes
+
+- **Files modified:** `docs/index.md` (2 lines — added intrinsic `width`/`height` to the two benchmark `<img>` tags). No other files changed.
+- **Active development branch:** [`fix/issue-6264-reserve-benchmark-image-height`](https://github.com/alex-nyan/uv/tree/fix/issue-6264-reserve-benchmark-image-height)
+- **Fix commit:** [`f0d0b3c` — docs: reserve benchmark image height to prevent layout shift (#6264)](https://github.com/alex-nyan/uv/commit/f0d0b3c264d31615c47f9dfac3604aa7999d38fb)
+- **The diff:**
+  ```diff
+  - <img alt="Shows a bar chart with benchmark results." src="...#only-light">
+  + <img alt="Shows a bar chart with benchmark results." width="496" height="107" src="...#only-light">
+  - <img alt="Shows a bar chart with benchmark results." src="...#only-dark">
+  + <img alt="Shows a bar chart with benchmark results." width="496" height="107" src="...#only-dark">
+  ```
+- **Verification harness** (on the reproduction branch): [`repro-6264/verify-fix/`](https://github.com/alex-nyan/uv/tree/repro/issue-6264-image-reflow/repro-6264/verify-fix) — `verify-fix.mjs` (before/after CLS of the exact fix), `probe-live.mjs` (live-site CLS), `probe-fix.mjs` (distortion check).
+- **Approach decision:** chose the HTML attribute fix over a CSS `aspect-ratio` rule because (a) it's what the issue asked for ("set a fixed height for the image"), (b) it's the standard web.dev/MDN recommendation, (c) it's a 2-line, single-file change, and (d) the live-site probe proved it stays responsive without any CSS.
 
 ---
 
 ## Testing Strategy
 
-### Manual / Visual Testing
+### Automated CLS measurement (performed)
 
-- DevTools (Slow 3G + disable cache) on the local docs build before vs. after the fix — confirm the page no longer jumps when the benchmark loads.
-- Lighthouse / Performance trace — confirm the benchmark `<img>` no longer contributes to CLS.
-- Cross-check desktop and mobile widths to confirm the image scales without distortion.
+Re-ran the measurement harness against the **exact** shipped markup (`width`/`height` attributes) using the real 496×107 dimensions and Material's content-image CSS (`max-width:100%; height:auto`), via the W3C Layout Instability API:
 
-### Automated Check
+| Viewport | Markup | Layout-shift events | **CLS** | Image ratio (4.636 = correct) |
+| --- | --- | --- | --- | --- |
+| Desktop 1280×800 | current (bug) | 1 | 0.0104 | 4.636 |
+| Desktop 1280×800 | **fixed** | **0** | **0** | 4.636 |
+| Mobile 390×844 | current (bug) | 1 | 0.0187 | 4.636 |
+| Mobile 390×844 | **fixed** | **0** | **0** | 4.636 |
 
-- The `repro-6264/measure-cls.mjs` harness re-run against the patched markup: assert CLS == 0 and 0 layout-shift events.
+**Result: PASS** — the fix eliminates the layout shift entirely (CLS → 0, 0 shift events) and the image stays proportional at every viewport. (Harness verdict captured in [`verify-fix/results.json`](https://github.com/alex-nyan/uv/tree/repro/issue-6264-image-reflow/repro-6264/verify-fix).)
+
+### Live-site baseline (performed)
+
+Measured the unpatched live docs at https://docs.astral.sh/uv/ with network throttled (~Slow 3G, cache disabled): **CLS ≈ 0.023**, with the offending shift attributed to the elements below the benchmark image — confirming the bug is real in production, not just in the isolated harness.
+
+### Manual / visual checks (recommended before/after the PR is reviewed)
+
+- `uv run --only-group docs mkdocs serve -f mkdocs.yml` and load the homepage with DevTools → Network throttled to "Slow 3G" + "Disable cache"; confirm the page no longer jumps when the benchmark loads.
+- Confirm light and dark themes both still show the correct benchmark image (the `#only-light` / `#only-dark` switching is untouched).
+- Spot-check the image isn't distorted on a narrow (mobile) viewport.
 
 ---
 
 ## Pull Request
 
-**PR Link:** _(Phase III — not yet submitted)_
+**Status:** ✅ Working solution complete and pushed — ready to open as a PR to `astral-sh/uv`.
 
-**Status:** Reproduction + plan complete (Phase II). Implementation to follow in Phase III.
+- **Source branch:** [`alex-nyan/uv:fix/issue-6264-reserve-benchmark-image-height`](https://github.com/alex-nyan/uv/tree/fix/issue-6264-reserve-benchmark-image-height)
+- **Open-PR link (compare view):** https://github.com/astral-sh/uv/compare/main...alex-nyan:uv:fix/issue-6264-reserve-benchmark-image-height
+- **PR Link:** _(to be opened in Phase IV — see note)_
+
+**Note:** the branch and commit are ready; the actual PR against `astral-sh/uv` will be opened (and iterated on per maintainer feedback) in Phase IV. uv's `CONTRIBUTING.md` requires AI-assisted contributions to follow Astral's [AI Policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md), which will be honored in the PR description.
 
 ---
 
