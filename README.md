@@ -3,7 +3,7 @@
 **Contribution Number:** 1
 **Student:** Nyan Lin Htet
 **Issue:** [astral-sh/uv #6264 — Fix reflow of index on image load](https://github.com/astral-sh/uv/issues/6264)
-**Status:** Phase III — Complete
+**Status:** Phase I — Complete
 
 ---
 
