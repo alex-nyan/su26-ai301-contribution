@@ -3,7 +3,7 @@
 **Contribution Number:** 1
 **Student:** Nyan Lin Htet
 **Issue:** [astral-sh/uv #6264 — Fix reflow of index on image load](https://github.com/astral-sh/uv/issues/6264)
-**Status:** Phase I — Complete
+**Status:** Phase IV — In Progress
 
 ---
 
@@ -203,13 +203,15 @@ Measured the unpatched live docs at https://docs.astral.sh/uv/ with network thro
 
 ## Pull Request
 
-**Status:** ✅ Working solution complete and pushed — ready to open as a PR to `astral-sh/uv`.
+**Status:** Phase IV — in progress. The fix branch is final and verified; the PR to `astral-sh/uv` is being opened, after which I'll iterate on any maintainer feedback.
 
 - **Source branch:** [`alex-nyan/uv:fix/issue-6264-reserve-benchmark-image-height`](https://github.com/alex-nyan/uv/tree/fix/issue-6264-reserve-benchmark-image-height)
 - **Open-PR link (compare view):** https://github.com/astral-sh/uv/compare/main...alex-nyan:uv:fix/issue-6264-reserve-benchmark-image-height
-- **PR Link:** _(to be opened in Phase IV — see note)_
+- **PR Link:** _(added once opened)_
 
-**Note:** the branch and commit are ready; the actual PR against `astral-sh/uv` will be opened (and iterated on per maintainer feedback) in Phase IV. uv's `CONTRIBUTING.md` requires AI-assisted contributions to follow Astral's [AI Policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md), which will be honored in the PR description.
+**What the PR does (my explanation):** the benchmark chart on the docs homepage was embedded with no intrinsic dimensions, so the browser reserved no space for it and the content below jumped down when it loaded (a Cumulative Layout Shift). The PR adds `width="496" height="107"` to both the light and dark benchmark `<img>` tags in `docs/index.md` so the browser reserves the image's box during the first layout pass. MkDocs Material already applies `height: auto` to content images, so the image stays responsive with no CSS change. I verified the element's CLS drops to 0 with no distortion.
+
+**AI Policy compliance:** per uv's `CONTRIBUTING.md` and Astral's [AI Policy](https://github.com/astral-sh/.github/blob/main/AI_POLICY.md), the PR description is written in my own words, any AI assistance is disclosed, and I can explain the change and respond to maintainers myself.
 
 ---
 
