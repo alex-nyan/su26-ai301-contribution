@@ -210,7 +210,8 @@ I measured the unpatched live docs at https://docs.astral.sh/uv/ with the networ
 - **Source branch:** [`alex-nyan/uv:fix/issue-6264-reserve-benchmark-image-height`](https://github.com/alex-nyan/uv/tree/fix/issue-6264-reserve-benchmark-image-height)
 - **Compare view:** https://github.com/astral-sh/uv/compare/main...alex-nyan:uv:fix/issue-6264-reserve-benchmark-image-height
 - **PR link:** _added once opened_
-- **Title:** `docs: set benchmark image dimensions to stop layout shift (#6264)`
+- **Title:** `docs: set benchmark image dimensions to stop layout shift` (the body closes #6264)
+- **Branch state:** rebased onto current upstream `main`; the compare shows a single commit touching only `docs/index.md` (2 lines).
 
 ### PR description (the text submitted with the PR)
 
